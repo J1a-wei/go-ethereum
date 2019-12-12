@@ -183,8 +183,17 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 			TrieDirtyDisabled:   config.NoPruning,
 			TrieTimeLimit:       config.TrieTimeout,
 		}
+
+		vmConfigHuobi    = vm.Config{
+			Debug: true,
+			Tracer: vm.NewHuobiLogger(&vm.LogConfig{DisableMemory: true, DisableStack: false, DisableStorage: true, Debug: true}),
+			EnablePreimageRecording: config.EnablePreimageRecording,
+			EWASMInterpreter:        config.EWASMInterpreter,
+			EVMInterpreter:          config.EVMInterpreter,
+		}
 	)
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, chainConfig, eth.engine, vmConfig, eth.shouldPreserve)
+
+	eth.blockchain, err = core.NewBlockChainWithMultiVMConfig(chainDb, cacheConfig, chainConfig, eth.engine, []vm.Config{vmConfig, vmConfigHuobi}, eth.shouldPreserve)
 	if err != nil {
 		return nil, err
 	}

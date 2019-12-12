@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/core/huobi"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -65,6 +66,8 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
+
+	txTraces := make([]*vm.LogRes, 0)
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
@@ -74,7 +77,21 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
+		if log, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+			logRes, err := log.GetTxLogs()
+			if err != nil {
+				return nil, nil, 0, err
+			}
+			log.FinishCapture()
+			logRes.ReceiptStatus = receipt.Status
+			txTraces = append(txTraces, logRes)
+		}
 	}
+
+	if _, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+		huobi.SaveTransfers(p.bc.TransferLog, block.Hash(), txTraces)
+	}
+
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
 
@@ -94,6 +111,9 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	context := NewEVMContext(msg, header, bc, author)
 	// Create a new environment which holds all relevant information
 	// about the transaction and calling mechanisms.
+	if logger, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+		logger.CaptureTx(tx.Hash())
+	}
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)

@@ -1,3 +1,155 @@
+
+## 项目简介
+go-ethereum 改造项目
+在官方项目上进行改造，增加新的api接口，主要为支持查询合约内的ETH转账。
+主要改造逻辑： 在evm执行交易时记录下虚拟机执行时的调用栈，运行结果，相关参数等数据，存储到leveldb中。 查询时通过分析存储的调用栈 opcode receipt等信息，解析合约内的ETH转账
+
+## api
+=debug_traceETHTransferByBlockNumber
+
+> - 根据blockNumber 查询指定区块内的所有合约内ETH转账交易
+> - params: blockNumber
+> - response:to地址为空 或value为空的 transfer 可忽略
+```
+curl -d '{"id":2000,"method":"debug_traceETHTransferByBlockNumber","params":["0x821e86"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111"
+
+response
+{
+  "jsonrpc": "2.0",
+  "id": 2000,
+  "result": {
+    "hash": "0xc6f2edc99189724b4fd1653bc26dabc815dedd24bf121af06c0c800959d0cbbd",
+    "transfers": [
+      {
+        "type": "call",
+        "status": "success",
+        "hash": "0x7be06fc7466badc32bdfbec11d76277b76abb26a5978b88cfd24c3d90354109c",
+        "from": "0x01EaCc3Ae59eE7fBBC191d63E8e1ccfdAc11628C",
+        "to": "0x854D359A586244c9E02B57a3770a4dC21Ffcaa8d",
+        "depth": 1,
+        "value": "0x0000000000000000000000000000000000000000000000000853a0d2313c0000"
+      },
+      {
+        "type": "call",
+        "status": "success",
+        "hash": "0x2d5f6ec3463a319c5cd71baaa4619e648da2b9ac548cc6ef905c9546025dc899",
+        "from": "0x01EaCc3Ae59eE7fBBC191d63E8e1ccfdAc11628C",
+        "to": "0xEb6d13a9CdD3D2245d5cD5C20B01eF51675CbfF1",
+        "depth": 1,
+        "value": "0x0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+      },
+      {
+        "type": "staticcall",
+        "status": "success",
+        "hash": "0x9ea570fe6e09adfa339bf8fa97b9aee1b5306b0c32184e72ed2a020d26e005e6",
+        "from": "0xfD0174784EbCe943bdb8832Ecdea9Fea30e7C7A9",
+        "to": "",
+        "depth": 1,
+        "value": ""
+      }
+    ]
+  }
+}
+```
+=debug_traceETHTransferByBlockHash
+```
+curl -d '{"id":2000,"method":"debug_traceETHTransferByBlockHash","params":["0xc6f2edc99189724b4fd1653bc26dabc815dedd24bf121af06c0c800959d0cbbd"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111"
+
+response: some with debug_traceETHTransferByBlockNumber
+```
+
+=debug_traceETHTransferLogByBlockHash
+
+> - 通过blockHash 查询指定区块内所有transferLog的详细信息
+> - params: blockHash
+> - response:普通ETH转账transferLog包含hash 和receiptstatus,合约调用TransferLog 包含evm相关信息
+```
+curl -d '{"id":2000,"method":"debug_traceETHTransferLogByBlockHash","params":["0x7f4f917bdd0a17e8c22c27a1e9f8fc6713891362243348968efce88569f90ada"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111"
+
+response
+{
+  "jsonrpc": "2.0",
+  "id": 2000,
+  "result": [
+    {
+      "hash": "0x7c28bdd4b3f2733b6e6d543c2efa93178cec713a9bd63c7043539958aea10527",
+      "receiptStatus": 1,
+      "ToAddr": "",
+      "logs": []
+    },
+    {
+      "hash": "0x224899154d01518588d148600fbf9591be237ccdcfa8dc9fb2c85083d9f5e135",
+      "receiptStatus": 1,
+      "ToAddr": "",
+      "logs": []
+    },
+    {
+      "hash": "0x36670fd914d07394d9bbbdb15a5c47f3dc447703bc921fcd7888274f43c8c615",
+      "receiptStatus": 1,
+      "ToAddr": "",
+      "logs": []
+    },
+    {
+      "hash": "0x5bb3fbbabae10fc75316af8d240d68365461d7fae4bed9c8a03ccfa310329f79",
+      "receiptStatus": 1,
+      "ToAddr": "",
+      "logs": [
+        {
+          "from": "0x209c4784AB1E8183Cf58cA33cb740efbF3FC18EF",
+          "pc": 181,
+          "op": "CALL",
+          "gas": 18339,
+          "gasCost": 9700,
+          "depth": 1,
+          "stack": [
+            "0000000000000000000000000000000000000000000000000000000000000060",
+            "0000000000000000000000000000000000000000000000000fdf745e97ec7800",
+            "00000000000000000000000032be343b94f860124dc4fee278fdcbd38c102d88",
+            "0000000000000000000000000000000000000000000000000000000000000000"
+          ]
+        },
+        {
+          "from": "0x209c4784AB1E8183Cf58cA33cb740efbF3FC18EF",
+          "pc": 182,
+          "op": "SWAP4",
+          "gas": 10939,
+          "gasCost": 3,
+          "depth": 1,
+          "stack": [
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            "0000000000000000000000000000000000000000000000000fdf745e97ec7800",
+            "0000000000000000000000000000000000000000000000000000000000000060",
+            "0000000000000000000000000000000000000000000000000000000000000001"
+          ]
+        }
+      ]
+    }
+    ...
+  }
+```
+=debug_traceETHTxReceiptStatusByHash
+
+> - 根据blockHash + txHash 查询指定交易的receipt状态
+> - params： blockHash, txHash
+> - response:  result：1 成功， 0 失败，""" 未查到
+```
+curl -d '{"id":2000,"method":"debug_traceETHTxReceiptStatusByHash","params":["0x7f4f917bdd0a17e8c22c27a1e9f8fc6713891362243348968efce88569f90ada","0x7ef7c3e1ad3fa1b5c60ef72268b3b8b6e112fd6b113445d9ecebc56379bccd22"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111" 
+response
+{
+  "jsonrpc": "2.0",
+  "id": 2000,
+  "result": 1
+}
+```
+
+## 开发测试
+
+本地编译  make geth
+发布      make push
+测试 迭代开发可调用改造相关api与老数据对比
+全面测试 可配合eth_parse项目 与区块链浏览器做数据对比
+
+---------------------------------Official README---------------------------------------
 ## Go Ethereum
 
 Official Golang implementation of the Ethereum protocol.

@@ -41,6 +41,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/trie"
+	"github.com/ethereum/go-ethereum/core/huobi"
 )
 
 const (
@@ -820,4 +821,44 @@ func (api *PrivateDebugAPI) computeTxEnv(blockHash common.Hash, txIndex int, ree
 		statedb.Finalise(vmenv.ChainConfig().IsEIP158(block.Number()))
 	}
 	return nil, vm.Context{}, nil, fmt.Errorf("transaction index %d out of range for block %#x", txIndex, blockHash)
+}
+
+func (api *PrivateDebugAPI) TraceETHTransferByBlockHash(ctx context.Context, hash common.Hash) (interface{}, error) {
+
+	return huobi.GetTransfersByBlockHash(api.eth.blockchain.TransferLog, hash)
+}
+
+func (api *PrivateDebugAPI) TraceETHTransferByBlockNumber(ctx context.Context, number rpc.BlockNumber) (interface{}, error) {
+	block := api.eth.blockchain.GetBlockByNumber(uint64(number))
+	if block != nil {
+		return huobi.GetTransfersByBlockHash(api.eth.blockchain.TransferLog, block.Hash())
+	} else {
+		return nil, fmt.Errorf("block %d not found", number)
+	}
+}
+
+func (api *PrivateDebugAPI) TraceETHTransferLogByBlockHash(ctx context.Context, hash common.Hash) (interface{}, error) {
+	return huobi.GetTransferLogs(api.eth.blockchain.TransferLog, hash)
+}
+
+func (api *PrivateDebugAPI) TraceETHTxReceiptStatusByHash(ctx context.Context, blockHash common.Hash, txHash common.Hash) (x interface{}, err error) {
+
+	bytesRes, err := api.eth.blockchain.TransferLog.Get(blockHash.Bytes())
+	if err != nil {
+		return
+	}
+
+	txTraces := make([]*vm.LogRes, 0)
+	err = rlp.DecodeBytes(bytesRes, &txTraces)
+	if err != nil {
+		return
+	}
+
+	for _, txTrace := range txTraces {
+		if txHash.String() == txTrace.Hash {
+			return txTrace.ReceiptStatus, nil
+		}
+	}
+
+	return
 }
