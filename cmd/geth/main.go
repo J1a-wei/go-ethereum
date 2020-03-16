@@ -131,6 +131,7 @@ var (
 		utils.NetrestrictFlag,
 		utils.NodeKeyFileFlag,
 		utils.NodeKeyHexFlag,
+		utils.DNSDiscoveryFlag,
 		utils.DeveloperFlag,
 		utils.DeveloperPeriodFlag,
 		utils.TestnetFlag,
@@ -194,7 +195,7 @@ func init() {
 	// Initialize the CLI app and start Geth
 	app.Action = geth
 	app.HideVersion = true // we have a command to print the version
-	app.Copyright = "Copyright 2013-2019 The go-ethereum Authors"
+	app.Copyright = "Copyright 2013-2020 The go-ethereum Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		initCommand,
@@ -205,6 +206,7 @@ func init() {
 		copydbCommand,
 		removedbCommand,
 		dumpCommand,
+		dumpGenesisCommand,
 		inspectCommand,
 		// See accountcmd.go:
 		accountCommand,
@@ -233,7 +235,7 @@ func init() {
 	app.Flags = append(app.Flags, metricsFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
-		return debug.Setup(ctx, "")
+		return debug.Setup(ctx)
 	}
 	app.After = func(ctx *cli.Context) error {
 		debug.Exit()
