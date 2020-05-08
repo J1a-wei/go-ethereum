@@ -149,6 +149,21 @@ response
 测试 迭代开发可调用改造相关api与老数据对比
 全面测试 可配合eth_parse项目 与区块链浏览器做数据对比
 
+### 编译补充
+
+> 环境说明：master 分支是和官方master分支同步的，task/huobi 是我们所使用的分支
+
+比方说，当前火币 v_huobi_1.9.11 (tag)
+先查看官方版本与火币版本的区别：`git diff v1.9.11 v_huobi_1.9.11 --stat`
+
+再查看需要升级的版本的变更:`git diff v1.9.11 v1.9.12 --stat`
+
+比较看看两者有没有文件上的冲突
+如果没有冲突，则执行merge（@task/huobi）: `git merge v1.9.12`
+
+开始编译:` make geth-linux-amd64`
+后续进行业务测试
+
 ---------------------------------Official README---------------------------------------
 ## Go Ethereum
 
