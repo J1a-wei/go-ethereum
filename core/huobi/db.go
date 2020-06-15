@@ -81,7 +81,7 @@ func upgradeAddStatusAndType(traceDB *leveldb.Database, oldVersion int) (newVers
 		Logs     []StructLogRes
 	}
 
-	itr := traceDB.NewIterator()
+	itr := traceDB.NewIterator(nil, nil)
 	for itr.Next() {
 		key := itr.Key()
 		value := itr.Value()
