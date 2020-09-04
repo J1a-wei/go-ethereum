@@ -56,7 +56,7 @@ func (l *HuobiLogger) CaptureTx(hash common.Hash) error {
 	return nil
 }
 
-func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, rStack *ReturnStack, contract *Contract, depth int, err error) error {
+func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, rStack *ReturnStack, storage []byte, contract *Contract, depth int, err error) error {
 	stk := make([]*big.Int, 0, 4)
 	stackL := stack.len()
 	for i, item := range stack.Data() {
@@ -64,7 +64,7 @@ func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uin
 			continue
 		}
 
-		stk = append(stk, new(big.Int).Set(item))
+		stk = append(stk, item.ToBig())
 	}
 
 	l.addLogger(&tmpLogger{pc, op, gas, cost, memory, stk, contract, depth, err})
@@ -87,7 +87,7 @@ func (l *HuobiLogger) addLogger(tmpL *tmpLogger) {
 			l.caredOpInDepth[l.lastOp.depth] || // CALL  CALL  EQUAL  PUSH(lastOP) POP(tmpL)
 			l.lastOp.depth < tmpL.depth) { // go deeper
 
-		l.logs = append(l.logs, StructLog{l.lastOp.contract.Address(), l.lastOp.pc, l.lastOp.op, l.lastOp.gas, l.lastOp.cost, nil, 0, l.lastOp.stack, nil,nil, l.lastOp.depth, 0,l.lastOp.err})
+		l.logs = append(l.logs, StructLog{l.lastOp.contract.Address(), l.lastOp.pc, l.lastOp.op, l.lastOp.gas, l.lastOp.cost, nil, 0, l.lastOp.stack, nil,nil, nil, l.lastOp.depth, 0,l.lastOp.err})
 	}
 
 	if l.lastOp != nil {
@@ -100,7 +100,7 @@ func (l *HuobiLogger) addLogger(tmpL *tmpLogger) {
 func (l *HuobiLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error {
 	if l.lastOp != nil &&
 		(l.lastOp.err != nil || CaredOps[l.lastOp.op] || l.caredOpInDepth[l.lastOp.depth]) {
-		l.logs = append(l.logs, StructLog{l.lastOp.contract.Address(), l.lastOp.pc, l.lastOp.op, l.lastOp.gas, l.lastOp.cost, nil, 0, l.lastOp.stack, nil,nil, l.lastOp.depth, 0,l.lastOp.err})
+		l.logs = append(l.logs, StructLog{l.lastOp.contract.Address(), l.lastOp.pc, l.lastOp.op, l.lastOp.gas, l.lastOp.cost, nil, 0, l.lastOp.stack, nil,nil, nil, l.lastOp.depth, 0,l.lastOp.err})
 	}
 
 	//l.err = err
