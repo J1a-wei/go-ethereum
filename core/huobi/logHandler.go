@@ -80,7 +80,7 @@ func handleCreate(hash string, receiptStatus uint64, index int, log vm.StructLog
 	return transfer
 }
 
-func handleCall(hash string,receiptStatus uint64,  index int, log vm.StructLogRes, node *node) *TransferTx {
+func handleCall(hash string, receiptStatus uint64, index int, log vm.StructLogRes, node *node) *TransferTx {
 	if len(log.Stack) <= 3 ||
 		big.NewInt(0).SetBytes(common.FromHex(log.Stack[len(log.Stack)-3])).Cmp(big.NewInt(0)) == 0 {
 		return nil
