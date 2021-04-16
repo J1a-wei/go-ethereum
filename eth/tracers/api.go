@@ -796,4 +796,3 @@ func APIs(backend Backend) []rpc.API {
 		},
 	}
 }
-

@@ -543,7 +543,7 @@ func (jst *Tracer) CaptureStart(from common.Address, to common.Address, create b
 	return nil
 }
 
-func(jst *Tracer) CaptureTx(hash common.Hash) error{
+func (jst *Tracer) CaptureTx(hash common.Hash) error {
 	return nil
 }
 
