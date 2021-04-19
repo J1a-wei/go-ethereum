@@ -23,11 +23,11 @@ main_name=${project_name}-${unix_time}.${tail}
 cd build/bin
 
 if [[ ${os} -eq "Darwin" ]]; then
-md5 geth | awk '{ print $4 }' > geth.md5;
+    md5 geth | awk '{ print $4 }' > geth.md5;
 elif [[ ${os} -eq "Linux" ]]; then
-md5sum geth | awk '{ print $1 }' > geth.md5;
+    md5sum geth | awk '{ print $1 }' > geth.md5;
 else
-echo "${os} not support now" > geth.md5;
+    echo "${os} not support now" > geth.md5;
 fi
 
 tar czvf geth.${tail} geth geth.md5
