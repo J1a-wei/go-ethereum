@@ -33,11 +33,11 @@ fi
 tar czvf geth.${tail} geth geth.md5
 
 if [[ ${os} -eq "Darwin" ]]; then
-md5 geth.${tail} | awk '{ print $4 }' > geth.${tail}.md5;
+    md5 geth.${tail} | awk '{ print $4 }' > geth.${tail}.md5;
 elif [[ ${os} -eq "Linux" ]]; then
-md5sum  geth.${tail} | awk '{ print $1 }' > geth.${tail}.md5;
+    md5sum  geth.${tail} | awk '{ print $1 }' > geth.${tail}.md5;
 else
-echo "${os} not support now" > geth.${tail}.md5;
+    echo "${os} not support now" > geth.${tail}.md5;
 fi
 
 git log -1 > geth.${tail}.commit
