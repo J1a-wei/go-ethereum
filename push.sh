@@ -20,15 +20,16 @@ unix_time=`date +%s`
 version_url=${url}/${maven_release}/${group}/${artifact}/${unix_time}
 main_name=${project_name}-${unix_time}.${tail}
 
+cd build/bin
+
 if [[ ${os} -eq "Darwin" ]]; then
-md5 ./build/bin/geth-linux-amd64 | awk '{ print $4 }' > geth.md5;
+md5 geth | awk '{ print $4 }' > geth.md5;
 elif [[ ${os} -eq "Linux" ]]; then
-md5sum  ./build/bin/geth-linux-amd64 | awk '{ print $1 }' > geth.md5;
+md5sum geth | awk '{ print $1 }' > geth.md5;
 else
 echo "${os} not support now" > geth.md5;
 fi
 
-cp ./build/bin/geth-linux-amd64 geth
 tar czvf geth.${tail} geth geth.md5
 
 if [[ ${os} -eq "Darwin" ]]; then
