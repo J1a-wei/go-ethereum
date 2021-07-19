@@ -169,12 +169,8 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Create a new context to be used in the EVM environment
 	blockContext := NewEVMBlockContext(header, bc, author)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, config, cfg)
-<<<<<<< HEAD
 	if logger, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
 		logger.CaptureTx(tx.Hash())
 	}
-	return applyTransaction(msg, config, bc, author, gp, statedb, header, tx, usedGas, vmenv)
-=======
 	return applyTransaction(msg, config, bc, author, gp, statedb, header.Number, header.Hash(), tx, usedGas, vmenv)
->>>>>>> v1.10.5
 }

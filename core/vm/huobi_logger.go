@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"math/big"
+	"github.com/holiman/uint256"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
@@ -25,7 +25,7 @@ type tmpLogger struct {
 	op        OpCode
 	gas, cost uint64
 	memory    *Memory
-	stack     []*big.Int
+	stack     []uint256.Int
 	contract  *Contract
 	depth     int
 	err       error
@@ -56,27 +56,27 @@ func (l *HuobiLogger) CaptureTx(hash common.Hash) error {
 	return nil
 }
 
-func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, storage []byte, contract *Contract, depth int, err error) error {
-	stk := make([]*big.Int, 0, 4)
+func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, storage []byte, depth int, err error) {
+	memory := scope.Memory
+	stack := scope.Stack
+	contract := scope.Contract
+	stk := make([]uint256.Int, 0, 4)
 	stackL := stack.len()
 	for i, item := range stack.Data() {
 		if stackL > 4 && i < stackL-4 { //  op call need last 4 stack items
 			continue
 		}
 
-		stk = append(stk, item.ToBig())
+		stk = append(stk, item)
 	}
 
 	l.addLogger(&tmpLogger{pc, op, gas, cost, memory, stk, contract, depth, err})
-
-	return nil
 }
 
-func (l *HuobiLogger) CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost uint64, memory *Memory, stack *Stack, contract *Contract, depth int, err error) error {
+func (l *HuobiLogger) CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, depth int, err error) {
 	if err != nil {
-		l.addLogger(&tmpLogger{pc, op, gas, cost, nil, make([]*big.Int, 0), contract, depth, err})
+		l.addLogger(&tmpLogger{pc, op, gas, cost, nil, make([]uint256.Int, 0), scope.Contract, depth, err})
 	}
-	return nil
 }
 
 func (l *HuobiLogger) addLogger(tmpL *tmpLogger) {
@@ -97,7 +97,7 @@ func (l *HuobiLogger) addLogger(tmpL *tmpLogger) {
 	l.lastOp = tmpL
 }
 
-func (l *HuobiLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) error {
+func (l *HuobiLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	if l.lastOp != nil &&
 		(l.lastOp.err != nil || CaredOps[l.lastOp.op] || l.caredOpInDepth[l.lastOp.depth]) {
 		l.logs = append(l.logs, StructLog{l.lastOp.contract.Address(), l.lastOp.pc, l.lastOp.op, l.lastOp.gas, l.lastOp.cost, nil, 0, l.lastOp.stack, nil, nil, l.lastOp.depth, 0, l.lastOp.err})
@@ -118,8 +118,6 @@ func (l *HuobiLogger) CaptureEnd(output []byte, gasUsed uint64, t time.Duration,
 	//	fmt.Println(string(tmp))
 	//}
 	//}
-
-	return nil
 }
 
 func (l *HuobiLogger) FinishCapture() {
@@ -172,7 +170,7 @@ func FormatLogs(logs []StructLog) []StructLogRes {
 		if trace.Stack != nil {
 			stack := make([]string, len(trace.Stack))
 			for i, stackValue := range trace.Stack {
-				stack[i] = fmt.Sprintf("%x", math.PaddedBigBytes(stackValue, 32))
+				stack[i] = fmt.Sprintf("%x", math.PaddedBigBytes(stackValue.ToBig(), 32))
 			}
 			formatted[index].Stack = stack
 		}

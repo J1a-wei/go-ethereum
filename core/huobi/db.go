@@ -10,7 +10,7 @@ import (
 )
 
 func OpenDB() (traceDB *leveldb.Database, err error) {
-	traceDB, err = leveldb.New("innerTx", 128, 1024, "innerTx")
+	traceDB, err = leveldb.New("innerTx", 128, 1024, "innerTx", false)
 	if err != nil {
 		return
 	}

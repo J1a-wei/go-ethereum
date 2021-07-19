@@ -192,8 +192,6 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 			Debug:                   true,
 			Tracer:                  vm.NewHuobiLogger(&vm.LogConfig{DisableMemory: true, DisableStack: false, DisableStorage: true, Debug: true}),
 			EnablePreimageRecording: config.EnablePreimageRecording,
-			EWASMInterpreter:        config.EWASMInterpreter,
-			EVMInterpreter:          config.EVMInterpreter,
 		}
 	)
 
