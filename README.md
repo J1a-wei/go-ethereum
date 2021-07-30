@@ -133,7 +133,7 @@ response
 > - params： blockHash, txHash
 > - response:  result：1 成功， 0 失败，""" 未查到
 ```
-curl -d '{"id":2000,"method":"debug_traceETHTxReceiptStatusByHash","params":["0x7f4f917bdd0a17e8c22c27a1e9f8fc6713891362243348968efce88569f90ada","0x7ef7c3e1ad3fa1b5c60ef72268b3b8b6e112fd6b113445d9ecebc56379bccd22"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111" 
+curl -d '{"id":2000,"method":"debug_traceETHTxReceiptStatusByHash","params":["0x7f4f917bdd0a17e8c22c27a1e9f8fc6713891362243348968efce88569f90ada","0x7ef7c3e1ad3fa1b5c60ef72268b3b8b6e112fd6b113445d9ecebc56379bccd22"]}' -H "content-type:application/json" -s "http://0.0.0.0:8111"
 response
 {
   "jsonrpc": "2.0",
@@ -152,6 +152,22 @@ response
 ### 编译补充
 
 > 环境说明：master 分支是和官方master分支同步的，task/huobi 是我们所使用的分支
+
+
+```
+
+/*
+默认git状态设置
+remote = origin
+origin-official git@github.com:ethereum/go-ethereum.git
+origin git@wallet-gitlab-1a-1.aws-jp1.huobiidc.com:dongwei/blockchain-go-ethereum.git
+*/
+// 更新官方代码. 注释
+git checkout master
+git pull -p origin-official master
+git pull origin-official master --tags
+git push --tags
+```
 
 比方说，当前火币 v_huobi_1.9.11 (tag)
 先查看官方版本与火币版本的区别：`git diff v1.9.11 v_huobi_1.9.11 --stat`
