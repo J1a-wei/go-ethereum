@@ -147,7 +147,7 @@ response
 本地编译  make geth
 发布      make push
 测试 迭代开发可调用改造相关api与老数据对比
-全面测试 可配合eth_parse项目 与区块链浏览器做数据对比
+全面测试 可配合[huobi-wallet/etherscan](http://wallet-gitlab-1a-1.aws-jp1.huobiidc.com/huobi-wallet/etherscan)项目 与区块链浏览器做数据对比
 
 ### 编译补充
 
