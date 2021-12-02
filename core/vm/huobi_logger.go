@@ -56,7 +56,7 @@ func (l *HuobiLogger) CaptureTx(hash common.Hash) error {
 	return nil
 }
 
-func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, storage []byte, depth int, err error) {
+func (l *HuobiLogger) CaptureState(pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, storage []byte, depth int, err error) {
 	memory := scope.Memory
 	stack := scope.Stack
 	contract := scope.Contract
@@ -73,7 +73,7 @@ func (l *HuobiLogger) CaptureState(env *EVM, pc uint64, op OpCode, gas, cost uin
 	l.addLogger(&tmpLogger{pc, op, gas, cost, memory, stk, contract, depth, err})
 }
 
-func (l *HuobiLogger) CaptureFault(env *EVM, pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, depth int, err error) {
+func (l *HuobiLogger) CaptureFault(pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, depth int, err error) {
 	if err != nil {
 		l.addLogger(&tmpLogger{pc, op, gas, cost, nil, make([]uint256.Int, 0), scope.Contract, depth, err})
 	}
