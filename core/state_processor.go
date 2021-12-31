@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/params"
 )
 
@@ -71,7 +72,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
-	txTraces := make([]*vm.LogRes, 0)
+	txTraces := make([]*logger.LogRes, 0)
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
 	// Iterate over and process the individual transactions
@@ -82,7 +83,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 		statedb.Prepare(tx.Hash(), i)
 
-		if logger, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+		if logger, ok := cfg.Tracer.(*logger.HuobiLogger); ok {
 			logger.CaptureTx(tx.Hash())
 		}
 		receipt, err := applyTransaction(msg, p.config, p.bc, nil, gp, statedb, blockNumber, blockHash, tx, usedGas, vmenv)
@@ -91,7 +92,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
-		if log, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+		if log, ok := cfg.Tracer.(*logger.HuobiLogger); ok {
 			logRes, err := log.GetTxLogs()
 			if err != nil {
 				return nil, nil, 0, err
@@ -102,7 +103,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 	}
 
-	if _, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+	if _, ok := cfg.Tracer.(*logger.HuobiLogger); ok {
 		huobi.SaveTransfers(p.bc.TransferLog, block.Hash(), txTraces)
 	}
 
@@ -169,7 +170,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Create a new context to be used in the EVM environment
 	blockContext := NewEVMBlockContext(header, bc, author)
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, config, cfg)
-	if logger, ok := cfg.Tracer.(*vm.HuobiLogger); ok {
+	if logger, ok := cfg.Tracer.(*logger.HuobiLogger); ok {
 		logger.CaptureTx(tx.Hash())
 	}
 	return applyTransaction(msg, config, bc, author, gp, statedb, header.Number, header.Hash(), tx, usedGas, vmenv)

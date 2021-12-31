@@ -3,7 +3,7 @@ package huobi
 import (
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/ethdb/leveldb"
 	"github.com/ethereum/go-ethereum/rlp"
 	level "github.com/syndtr/goleveldb/leveldb"
@@ -92,14 +92,15 @@ func upgradeAddStatusAndType(traceDB *leveldb.Database, oldVersion int) (newVers
 			return
 		}
 
-		newTxTrace := make([]*vm.LogRes, 0)
+		newTxTrace := make([]*logger.LogRes, 0)
 		for _, old := range txTraces {
-			newT := &vm.LogRes{}
+			newT := &logger.LogRes{}
 			newT.Hash = old.Hash
 			newT.TxToAddr = old.TxToAddr
-			newT.Logs = make([]vm.StructLogRes, 0)
+			newT.Logs = make([]logger.StructLogRes, 0)
 			for _, oldLog := range old.Logs {
-				newT.Logs = append(newT.Logs, vm.StructLogRes{oldLog.From, oldLog.Pc, oldLog.Op, oldLog.Gas, oldLog.GasCost, oldLog.Depth, oldLog.Stack, ""})
+				newT.Logs = append(newT.Logs, logger.StructLogRes{From: oldLog.From, Pc: oldLog.Pc, Op: oldLog.Op,
+					Gas: oldLog.Gas, GasCost: oldLog.GasCost, Depth: oldLog.Depth, Stack: oldLog.Stack})
 			}
 		}
 

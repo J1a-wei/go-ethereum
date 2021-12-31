@@ -9,9 +9,10 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 )
 
-type logHandler func(hash string, receiptStatus uint64, index int, log vm.StructLogRes, node *node) *TransferTx
+type logHandler func(hash string, receiptStatus uint64, index int, log logger.StructLogRes, node *node) *TransferTx
 
 func getLogHandler(op vm.OpCode) logHandler {
 	switch op {
@@ -26,7 +27,7 @@ func getLogHandler(op vm.OpCode) logHandler {
 	return nil
 }
 
-func handleCreate(hash string, receiptStatus uint64, index int, log vm.StructLogRes, node *node) *TransferTx {
+func handleCreate(hash string, receiptStatus uint64, index int, log logger.StructLogRes, node *node) *TransferTx {
 	transfer := &TransferTx{}
 
 	transfer.Type = strings.ToLower(log.Op)
@@ -80,7 +81,7 @@ func handleCreate(hash string, receiptStatus uint64, index int, log vm.StructLog
 	return transfer
 }
 
-func handleCall(hash string, receiptStatus uint64, index int, log vm.StructLogRes, node *node) *TransferTx {
+func handleCall(hash string, receiptStatus uint64, index int, log logger.StructLogRes, node *node) *TransferTx {
 	if len(log.Stack) <= 3 ||
 		big.NewInt(0).SetBytes(common.FromHex(log.Stack[len(log.Stack)-3])).Cmp(big.NewInt(0)) == 0 {
 		return nil
@@ -134,7 +135,7 @@ func handleCall(hash string, receiptStatus uint64, index int, log vm.StructLogRe
 	return transfer
 }
 
-func handleOtherCalls(hash string, receiptStatus uint64, index int, log vm.StructLogRes, node *node) *TransferTx {
+func handleOtherCalls(hash string, receiptStatus uint64, index int, log logger.StructLogRes, node *node) *TransferTx {
 	transfer := &TransferTx{}
 	transfer.Type = strings.ToLower(log.Op)
 	transfer.Hash = hash
