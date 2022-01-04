@@ -35,7 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -573,7 +573,7 @@ func (api *PrivateDebugAPI) TraceETHTxReceiptStatusByHash(ctx context.Context, b
 		return
 	}
 
-	txTraces := make([]*vm.LogRes, 0)
+	txTraces := make([]*logger.LogRes, 0)
 	err = rlp.DecodeBytes(bytesRes, &txTraces)
 	if err != nil {
 		return

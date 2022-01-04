@@ -3,6 +3,7 @@ package huobi
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/ethdb/leveldb"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -23,7 +24,7 @@ type BlockTransfer struct {
 	Transfers []*TransferTx `json:"transfers"`
 }
 
-func SaveTransfers(db *leveldb.Database, hash common.Hash, txLogs []*vm.LogRes) (err error) {
+func SaveTransfers(db *leveldb.Database, hash common.Hash, txLogs []*logger.LogRes) (err error) {
 	result, err := rlp.EncodeToBytes(txLogs)
 	if err != nil {
 		return
@@ -44,7 +45,7 @@ const (
 
 type node struct {
 	// one node for one call
-	logs []vm.StructLogRes
+	logs []logger.StructLogRes
 
 	children []*node
 
@@ -63,7 +64,7 @@ func GetTransfersByBlockHash(db *leveldb.Database, hash common.Hash) (result Blo
 		return
 	}
 
-	txTraces := make([]*vm.LogRes, 0)
+	txTraces := make([]*logger.LogRes, 0)
 	err = rlp.DecodeBytes(bytesRes, &txTraces)
 	if err != nil {
 		return
@@ -79,7 +80,7 @@ func GetTransfersByBlockHash(db *leveldb.Database, hash common.Hash) (result Blo
 		current := root
 
 		for i, log := range item.Logs {
-			if vm.CaredOps[vm.StringToOp(log.Op)] ||
+			if logger.CaredOps[vm.StringToOp(log.Op)] ||
 				(i > 0 && item.Logs[i-1].Depth < log.Depth) { //condition 2: deeper than last  CALL(depth 1) -> REVERT(depth 2 current, has error) -> SWAP(depth 1)
 
 				//|| // condition 1: start op(can create a new depth)
@@ -183,13 +184,13 @@ func generateTransferData(hash string, receiptStatus uint64, node *node, transfe
 	return
 }
 
-func GetTransferLogs(db *leveldb.Database, hash common.Hash) (txTraces []*vm.LogRes, err error) {
+func GetTransferLogs(db *leveldb.Database, hash common.Hash) (txTraces []*logger.LogRes, err error) {
 	bytesRes, err := db.Get(hash.Bytes())
 	if err != nil {
 		return
 	}
 
-	txTraces = make([]*vm.LogRes, 0)
+	txTraces = make([]*logger.LogRes, 0)
 	err = rlp.DecodeBytes(bytesRes, &txTraces)
 	if err != nil {
 		return

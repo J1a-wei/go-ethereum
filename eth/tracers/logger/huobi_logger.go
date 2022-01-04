@@ -1,14 +1,14 @@
-package vm
+package logger
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/holiman/uint256"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/holiman/uint256"
 )
 
 type HuobiLogger struct {
@@ -22,31 +22,31 @@ type HuobiLogger struct {
 
 type tmpLogger struct {
 	pc        uint64
-	op        OpCode
+	op        vm.OpCode
 	gas, cost uint64
-	memory    *Memory
+	memory    *vm.Memory
 	stack     []uint256.Int
-	contract  *Contract
+	contract  *vm.Contract
 	depth     int
 	err       error
 }
 
-var CaredOps = map[OpCode]bool{
-	CALL:         true,
-	CREATE:       true,
-	CREATE2:      true,
-	CALLCODE:     true,
-	DELEGATECALL: true,
-	STATICCALL:   true,
-	//SELFDESTRUCT: true,
+var CaredOps = map[vm.OpCode]bool{
+	vm.CALL:         true,
+	vm.CREATE:       true,
+	vm.CREATE2:      true,
+	vm.CALLCODE:     true,
+	vm.DELEGATECALL: true,
+	vm.STATICCALL:   true,
+	//vm.SELFDESTRUCT: true,
 }
 
 // NewStructLogger returns a new logger
-func NewHuobiLogger(cfg *LogConfig) *HuobiLogger {
-	logger := &HuobiLogger{}
-	logger.StructLogger = NewStructLogger(cfg)
+func NewHuobiLogger(cfg *Config) *HuobiLogger {
+	l := &HuobiLogger{}
+	l.StructLogger = NewStructLogger(cfg)
 
-	return logger
+	return l
 }
 
 func (l *HuobiLogger) CaptureTx(hash common.Hash) error {
@@ -56,12 +56,12 @@ func (l *HuobiLogger) CaptureTx(hash common.Hash) error {
 	return nil
 }
 
-func (l *HuobiLogger) CaptureState(pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, storage []byte, depth int, err error) {
+func (l *HuobiLogger) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, storage []byte, depth int, err error) {
 	memory := scope.Memory
 	stack := scope.Stack
 	contract := scope.Contract
 	stk := make([]uint256.Int, 0, 4)
-	stackL := stack.len()
+	stackL := len(stack.Data())
 	for i, item := range stack.Data() {
 		if stackL > 4 && i < stackL-4 { //  op call need last 4 stack items
 			continue
@@ -73,7 +73,7 @@ func (l *HuobiLogger) CaptureState(pc uint64, op OpCode, gas, cost uint64, scope
 	l.addLogger(&tmpLogger{pc, op, gas, cost, memory, stk, contract, depth, err})
 }
 
-func (l *HuobiLogger) CaptureFault(pc uint64, op OpCode, gas, cost uint64, scope *ScopeContext, depth int, err error) {
+func (l *HuobiLogger) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	if err != nil {
 		l.addLogger(&tmpLogger{pc, op, gas, cost, nil, make([]uint256.Int, 0), scope.Contract, depth, err})
 	}
@@ -154,7 +154,7 @@ type StructLogRes struct {
 	ErrMsg  string   `json:"errMsg,omitempty"`
 }
 
-// formatLogs formats EVM returned structured logs for json output
+// FormatLogs formats EVM returned structured logs for json output
 func FormatLogs(logs []StructLog) []StructLogRes {
 	formatted := make([]StructLogRes, len(logs))
 	for index, trace := range logs {
